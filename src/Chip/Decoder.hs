@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 
-module Decoder where
+module Chip.Decoder where
 
 
 import           Data.Map.Lazy                  ( Map )
@@ -13,14 +13,14 @@ import           Chip.Instruction
 data Hex = H0 | H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8 | H9 | Ha | Hb | Hc | Hd | He | Hf
     deriving (Eq, Ord, Enum, Bounded, Show)
 
-data Decoder part inst =
+data Decoder part =
     Case (Instruction (Int,Int))
-    | Switch Int (Map part (Decoder part inst))
+    | Switch Int (Map part (Decoder part))
 
-case1 :: Ord p => Int -> p -> Decoder p i -> Decoder p i
+case1 :: Ord p => Int -> p -> Decoder p -> Decoder p
 case1 i n x = Switch i [(n, x)]
 
-case2 :: Ord p => (Int, p) -> (Int, p) -> Decoder p i -> Decoder p i
+case2 :: Ord p => (Int, p) -> (Int, p) -> Decoder p -> Decoder p
 case2 (i1, n1) (i2, n2) x = case1 i1 n1 (case1 i2 n2 x)
 
 vx, vy, kk, nnn, n :: Param (Int, Int)
@@ -31,7 +31,7 @@ kk = Imm (0, 1)
 nnn = Imm (0, 2)
 n = Imm (0, 0)
 
-decode, decode_0xxx, decode_8xxx, decode_Fxxx, decode_Exxx :: Decoder Hex ()
+decode, decode_0xxx, decode_8xxx, decode_Fxxx, decode_Exxx :: Decoder Hex
 decode = Switch
   3
   [ (H0, decode_0xxx)

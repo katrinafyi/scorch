@@ -24,6 +24,7 @@ dependencies:
 - containers
 - llvm-hs
 - llvm-hs-pure
+- transformers
 
 ghc-options:
 - -Wall

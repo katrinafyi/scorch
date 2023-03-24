@@ -1,19 +1,23 @@
+{-# LANGUAGE DeriveTraversable #-}
+
 module Chip.Instruction where
 
 data Register a =
-    V a
-    | I
-    | DT
-    | ST
+  V a
+  | I
+  | DT
+  | ST
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 data Param a =
     Blank
     | Reg (Register a)
     | Imm a
     | K
-    | F 
+    | F
     | B
     | Iref
+    deriving (Eq, Show, Functor, Foldable, Traversable)
 
 data Mnemonic =
     CLS
@@ -42,9 +46,10 @@ data Mnemonic =
     | EXIT
     | LOW
     | HIGH
+    deriving (Eq, Show)
 
-data Instruction a =
-    Inst Mnemonic (Param a) (Param a) (Param a)
+data Instruction a = Inst Mnemonic (Param a) (Param a) (Param a)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 inst0 :: Mnemonic -> Instruction a
 inst1 :: Mnemonic -> Param a -> Instruction a

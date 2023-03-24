@@ -25,9 +25,9 @@ source-repository head
 
 library
   exposed-modules:
+      Chip.Decoder
       Chip.Instruction
-      Decoder
-      Lib
+      Compiler
   other-modules:
       Paths_scorch
   hs-source-dirs:
@@ -38,6 +38,7 @@ library
     , containers
     , llvm-hs
     , llvm-hs-pure
+    , transformers
   default-language: Haskell2010
 
 executable scorch-exe
@@ -53,6 +54,7 @@ executable scorch-exe
     , llvm-hs
     , llvm-hs-pure
     , scorch
+    , transformers
   default-language: Haskell2010
 
 test-suite scorch-test
@@ -69,4 +71,5 @@ test-suite scorch-test
     , llvm-hs
     , llvm-hs-pure
     , scorch
+    , transformers
   default-language: Haskell2010
