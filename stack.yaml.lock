@@ -3,7 +3,33 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: llvm-hs
+    pantry-tree:
+      sha256: 7a64da9e0bc8d080e9b4941044fb4585eea96fb0472e07822a8e364e9b7a91ae
+      size: 12716
+    sha256: c9db85a432a67a942832c1b4d678c7eac73ce959aa1f3f7c7df4346be0a3f6d3
+    size: 9802236
+    subdir: llvm-hs
+    url: https://github.com/llvm-hs/llvm-hs/archive/79772d75da83714e0faa4514a69c8f8bbfdf2dc4.tar.gz
+    version: 15.0.0
+  original:
+    subdir: llvm-hs
+    url: https://github.com/llvm-hs/llvm-hs/archive/79772d75da83714e0faa4514a69c8f8bbfdf2dc4.tar.gz
+- completed:
+    name: llvm-hs-pure
+    pantry-tree:
+      sha256: 0eb9ec2745a283b7f8a417331510797e7f00a3359db13b04b50f32c75d8c5f52
+      size: 2712
+    sha256: c9db85a432a67a942832c1b4d678c7eac73ce959aa1f3f7c7df4346be0a3f6d3
+    size: 9802236
+    subdir: llvm-hs-pure
+    url: https://github.com/llvm-hs/llvm-hs/archive/79772d75da83714e0faa4514a69c8f8bbfdf2dc4.tar.gz
+    version: 15.0.0
+  original:
+    subdir: llvm-hs-pure
+    url: https://github.com/llvm-hs/llvm-hs/archive/79772d75da83714e0faa4514a69c8f8bbfdf2dc4.tar.gz
 snapshots:
 - completed:
     sha256: adbc602422dde10cc330175da7de8609e70afc41449a7e2d6e8b1827aa0e5008

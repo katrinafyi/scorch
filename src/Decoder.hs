@@ -31,7 +31,7 @@ kk = Imm (0, 1)
 nnn = Imm (0, 2)
 n = Imm (0, 0)
 
-decode, decode_0xxx, decode_8xxx, decode_Fxxx :: Decoder Hex ()
+decode, decode_0xxx, decode_8xxx, decode_Fxxx, decode_Exxx :: Decoder Hex ()
 decode = Switch
   3
   [ (H0, decode_0xxx)
