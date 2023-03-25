@@ -31,7 +31,7 @@ llmodule = IRB.M.buildModule "asdf" $ do
     -- (const $ IRB.emitTerm
       -- (AST.I.Ret (Just (AST.ConstantOperand (AST.C.Int 31 23))) [])
     -- )
-    (\[x] -> void $ Compiler.operandDecoder 10 x (1,3))
+    (\[x] -> void $ Compiler.operandDecoder x (1,3))
 
 main :: IO ()
 main = do
