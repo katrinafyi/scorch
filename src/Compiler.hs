@@ -52,6 +52,9 @@ compileDecoder compileInst (Case inst) operand = do
   inst' <- mapM (operandDecoder operand) inst
   compileInst inst'
 compileDecoder compileInst (Switch n cases) operand = do
+  LL.ensureBlock
+  name <- LL.currentBlock
+
   wd <- operandWidth operand
   x1 <- if n == 0 then pure operand else LL.I.lshr operand (int wd n)
   x2 <- LL.I.trunc x1 (AST.T.IntegerType 1)
@@ -72,18 +75,21 @@ compileDecoder compileInst (Switch n cases) operand = do
   let jumpTarget key = maybe (AST.C.Int 1 0) (AST.C.BlockAddress func) $ Data.Map.lookup key cases'
   _ <- LL.M.global jumpsName jumpsTy (AST.C.Array jumpTy (fmap jumpTarget keys))
 
+  -- branch based on bit
   LL.emitTerm $ AST.IndirectBr x2 (Data.Map.elems cases') []
 
-  -- branch based on bit
-  LL.currentBlock
+  pure name
 
 nested :: (LL.MonadIRBuilder m) => m a -> m a
 nested ir = do 
   before <- LL.liftIRState $ gets LL.builderBlock 
-  LL.liftIRState $ modify $ \s -> s { LL.builderBlock = Nothing }
-  result <- ir 
+  tailName <- LL.fresh
+  LL.I.br tailName
+
   LL.block
-  LL.liftIRState $ modify $ \s -> s { LL.builderBlock = before } 
+  result <- ir 
+
+  LL.emitBlockStart tailName
   pure result
 
 {-

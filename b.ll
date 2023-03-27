@@ -1,373 +1,580 @@
 ; ModuleID = 'df'
 source_filename = "<string>"
 
-@decode_table_0 = global <16 x ptr> [ptr blockaddress(@f, %0), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %1), ptr false]
-@decode_table_1 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %2), ptr false]
-@decode_table_2 = global <16 x ptr> [ptr blockaddress(@f, %4), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
-@decode_table_3 = global <16 x ptr> [ptr blockaddress(@f, %31), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
-@decode_table_4 = global <16 x ptr> [ptr blockaddress(@f, %49), ptr blockaddress(@f, %55), ptr blockaddress(@f, %61), ptr blockaddress(@f, %67), ptr blockaddress(@f, %73), ptr blockaddress(@f, %79), ptr blockaddress(@f, %85), ptr blockaddress(@f, %91), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %97), ptr false]
-@decode_table_5 = global <16 x ptr> [ptr blockaddress(@f, %105), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
-@decode_table_6 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %129), ptr false, ptr false, ptr false, ptr false, ptr false]
-@decode_table_7 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %136), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
-@decode_table_8 = global <16 x ptr> [ptr false, ptr blockaddress(@f, %130), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %137), ptr false]
-@decode_table_9 = global <16 x ptr> [ptr blockaddress(@f, %147), ptr blockaddress(@f, %153), ptr blockaddress(@f, %159), ptr blockaddress(@f, %165), ptr blockaddress(@f, %171), ptr blockaddress(@f, %177), ptr blockaddress(@f, %183), ptr blockaddress(@f, %189), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %195), ptr false]
-@decode_table_10 = global <16 x ptr> [ptr blockaddress(@f, %7), ptr blockaddress(@f, %12), ptr blockaddress(@f, %15), ptr blockaddress(@f, %20), ptr blockaddress(@f, %25), ptr blockaddress(@f, %32), ptr blockaddress(@f, %38), ptr blockaddress(@f, %43), ptr blockaddress(@f, %98), ptr blockaddress(@f, %106), ptr blockaddress(@f, %110), ptr blockaddress(@f, %113), ptr blockaddress(@f, %118), ptr blockaddress(@f, %125), ptr blockaddress(@f, %140), ptr blockaddress(@f, %196)]
+@decode_table_0 = global <16 x ptr> [ptr blockaddress(@f, %17), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %20), ptr false]
+@decode_table_1 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %13), ptr false]
+@decode_table_2 = global <16 x ptr> [ptr blockaddress(@f, %9), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
+@decode_table_3 = global <16 x ptr> [ptr blockaddress(@f, %56), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
+@decode_table_4 = global <16 x ptr> [ptr blockaddress(@f, %80), ptr blockaddress(@f, %87), ptr blockaddress(@f, %94), ptr blockaddress(@f, %101), ptr blockaddress(@f, %108), ptr blockaddress(@f, %115), ptr blockaddress(@f, %122), ptr blockaddress(@f, %129), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %136), ptr false]
+@decode_table_5 = global <16 x ptr> [ptr blockaddress(@f, %148), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
+@decode_table_6 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %184), ptr false, ptr false, ptr false, ptr false, ptr false]
+@decode_table_7 = global <16 x ptr> [ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %195), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false]
+@decode_table_8 = global <16 x ptr> [ptr false, ptr blockaddress(@f, %177), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %188), ptr false]
+@decode_table_9 = global <16 x ptr> [ptr blockaddress(@f, %209), ptr blockaddress(@f, %216), ptr blockaddress(@f, %223), ptr blockaddress(@f, %230), ptr blockaddress(@f, %237), ptr blockaddress(@f, %244), ptr blockaddress(@f, %251), ptr blockaddress(@f, %258), ptr false, ptr false, ptr false, ptr false, ptr false, ptr false, ptr blockaddress(@f, %265), ptr false]
+@decode_table_10 = global <16 x ptr> [ptr blockaddress(@f, %5), ptr blockaddress(@f, %30), ptr blockaddress(@f, %34), ptr blockaddress(@f, %40), ptr blockaddress(@f, %46), ptr blockaddress(@f, %48), ptr blockaddress(@f, %64), ptr blockaddress(@f, %70), ptr blockaddress(@f, %72), ptr blockaddress(@f, %140), ptr blockaddress(@f, %154), ptr blockaddress(@f, %158), ptr blockaddress(@f, %164), ptr blockaddress(@f, %172), ptr blockaddress(@f, %174), ptr blockaddress(@f, %201)]
 
 define void @f(i10 %param_0) {
-  ret void
+  br label %270
 
-1:                                                ; preds = %2
-  ret void
+1:                                                ; preds = %270
+  %2 = lshr exact i10 %param_0, 3
+  %3 = trunc i10 %2 to i1
+  br label %269
 
-2:                                                ; preds = %4
-  %3 = trunc i10 %param_0 to i1
-  indirectbr i1 %3, [label %0, label %1]
+4:                                                ; No predecessors!
+  br label %27
 
-4:                                                ; preds = %7
-  %5 = lshr exact i10 %param_0, 1
-  %6 = trunc i10 %5 to i1
-  indirectbr i1 %6, [label %2]
+5:                                                ; preds = %269
+  %6 = lshr exact i10 %param_0, 2
+  %7 = trunc i10 %6 to i1
+  br label %26
 
-7:                                                ; preds = %198
-  %8 = lshr exact i10 %param_0, 2
-  %9 = trunc i10 %8 to i1
-  indirectbr i1 %9, [label %4]
+8:                                                ; No predecessors!
+  br label %25
 
-10:                                               ; No predecessors!
-  %11 = trunc i10 %param_0 to i3
-  ret void
+9:                                                ; preds = %26
+  %10 = lshr exact i10 %param_0, 1
+  %11 = trunc i10 %10 to i1
+  br label %24
 
-12:                                               ; preds = %198
-  ret void
+12:                                               ; No predecessors!
+  br label %23
 
-13:                                               ; No predecessors!
-  %14 = trunc i10 %param_0 to i3
-  ret void
+13:                                               ; preds = %24
+  %14 = trunc i10 %param_0 to i1
+  br label %22
 
-15:                                               ; preds = %198
-  ret void
+15:                                               ; No predecessors!
+  br label %18
 
 16:                                               ; No predecessors!
-  %17 = lshr exact i10 %param_0, i8 2
-  %18 = trunc i10 %17 to i1
-  %19 = trunc i10 %param_0 to i2
   ret void
 
-20:                                               ; preds = %198
+17:                                               ; preds = %22
   ret void
 
-21:                                               ; No predecessors!
-  %22 = lshr exact i10 %param_0, i8 2
-  %23 = trunc i10 %22 to i1
-  %24 = trunc i10 %param_0 to i2
+18:                                               ; preds = %15
+  br label %21
+
+19:                                               ; No predecessors!
   ret void
 
-25:                                               ; preds = %198
+20:                                               ; preds = %22
   ret void
 
-26:                                               ; No predecessors!
-  %27 = lshr exact i10 %param_0, i8 2
-  %28 = trunc i10 %27 to i1
-  %29 = lshr exact i10 %param_0, i9 1
-  %30 = trunc i10 %29 to i1
+21:                                               ; preds = %18
   ret void
 
-31:                                               ; preds = %32
+22:                                               ; preds = %13
+  indirectbr i1 %14, [label %17, label %20]
+
+23:                                               ; preds = %12
   ret void
 
-32:                                               ; preds = %198
-  %33 = trunc i10 %param_0 to i1
-  indirectbr i1 %33, [label %31]
+24:                                               ; preds = %9
+  indirectbr i1 %11, [label %13]
 
-34:                                               ; No predecessors!
-  %35 = lshr exact i10 %param_0, i8 2
-  %36 = trunc i10 %35 to i1
-  %37 = trunc i10 %param_0 to i2
+25:                                               ; preds = %8
   ret void
 
-38:                                               ; preds = %198
+26:                                               ; preds = %5
+  indirectbr i1 %7, [label %9]
+
+27:                                               ; preds = %4
+  br label %31
+
+28:                                               ; No predecessors!
+  %29 = trunc i10 %param_0 to i3
   ret void
 
-39:                                               ; No predecessors!
-  %40 = lshr exact i10 %param_0, i8 2
-  %41 = trunc i10 %40 to i1
-  %42 = trunc i10 %param_0 to i2
+30:                                               ; preds = %269
   ret void
 
-43:                                               ; preds = %198
+31:                                               ; preds = %27
+  br label %35
+
+32:                                               ; No predecessors!
+  %33 = trunc i10 %param_0 to i3
   ret void
 
-44:                                               ; No predecessors!
-  %45 = lshr exact i10 %param_0, i8 2
-  %46 = trunc i10 %45 to i1
-  %47 = lshr exact i10 %param_0, i9 1
-  %48 = trunc i10 %47 to i1
+34:                                               ; preds = %269
   ret void
 
-49:                                               ; preds = %98
+35:                                               ; preds = %31
+  br label %41
+
+36:                                               ; No predecessors!
+  %37 = lshr exact i10 %param_0, i8 2
+  %38 = trunc i10 %37 to i1
+  %39 = trunc i10 %param_0 to i2
   ret void
+
+40:                                               ; preds = %269
+  ret void
+
+41:                                               ; preds = %35
+  br label %47
+
+42:                                               ; No predecessors!
+  %43 = lshr exact i10 %param_0, i8 2
+  %44 = trunc i10 %43 to i1
+  %45 = trunc i10 %param_0 to i2
+  ret void
+
+46:                                               ; preds = %269
+  ret void
+
+47:                                               ; preds = %41
+  br label %59
+
+48:                                               ; preds = %269
+  %49 = trunc i10 %param_0 to i1
+  br label %58
 
 50:                                               ; No predecessors!
-  %51 = lshr exact i10 %param_0, i8 2
-  %52 = trunc i10 %51 to i1
-  %53 = lshr exact i10 %param_0, i9 1
-  %54 = trunc i10 %53 to i1
+  br label %57
+
+51:                                               ; No predecessors!
+  %52 = lshr exact i10 %param_0, i8 2
+  %53 = trunc i10 %52 to i1
+  %54 = lshr exact i10 %param_0, i9 1
+  %55 = trunc i10 %54 to i1
   ret void
 
-55:                                               ; preds = %98
+56:                                               ; preds = %58
   ret void
 
-56:                                               ; No predecessors!
-  %57 = lshr exact i10 %param_0, i8 2
-  %58 = trunc i10 %57 to i1
-  %59 = lshr exact i10 %param_0, i9 1
-  %60 = trunc i10 %59 to i1
+57:                                               ; preds = %50
   ret void
 
-61:                                               ; preds = %98
+58:                                               ; preds = %48
+  indirectbr i1 %49, [label %56]
+
+59:                                               ; preds = %47
+  br label %65
+
+60:                                               ; No predecessors!
+  %61 = lshr exact i10 %param_0, i8 2
+  %62 = trunc i10 %61 to i1
+  %63 = trunc i10 %param_0 to i2
   ret void
 
-62:                                               ; No predecessors!
-  %63 = lshr exact i10 %param_0, i8 2
-  %64 = trunc i10 %63 to i1
-  %65 = lshr exact i10 %param_0, i9 1
-  %66 = trunc i10 %65 to i1
+64:                                               ; preds = %269
   ret void
 
-67:                                               ; preds = %98
+65:                                               ; preds = %59
+  br label %71
+
+66:                                               ; No predecessors!
+  %67 = lshr exact i10 %param_0, i8 2
+  %68 = trunc i10 %67 to i1
+  %69 = trunc i10 %param_0 to i2
   ret void
 
-68:                                               ; No predecessors!
-  %69 = lshr exact i10 %param_0, i8 2
-  %70 = trunc i10 %69 to i1
-  %71 = lshr exact i10 %param_0, i9 1
-  %72 = trunc i10 %71 to i1
+70:                                               ; preds = %269
   ret void
 
-73:                                               ; preds = %98
-  ret void
+71:                                               ; preds = %65
+  br label %139
+
+72:                                               ; preds = %269
+  %73 = trunc i10 %param_0 to i1
+  br label %138
 
 74:                                               ; No predecessors!
-  %75 = lshr exact i10 %param_0, i8 2
-  %76 = trunc i10 %75 to i1
-  %77 = lshr exact i10 %param_0, i9 1
-  %78 = trunc i10 %77 to i1
+  br label %81
+
+75:                                               ; No predecessors!
+  %76 = lshr exact i10 %param_0, i8 2
+  %77 = trunc i10 %76 to i1
+  %78 = lshr exact i10 %param_0, i9 1
+  %79 = trunc i10 %78 to i1
   ret void
 
-79:                                               ; preds = %98
+80:                                               ; preds = %138
   ret void
 
-80:                                               ; No predecessors!
-  %81 = lshr exact i10 %param_0, i8 2
-  %82 = trunc i10 %81 to i1
-  %83 = lshr exact i10 %param_0, i9 1
+81:                                               ; preds = %74
+  br label %88
+
+82:                                               ; No predecessors!
+  %83 = lshr exact i10 %param_0, i8 2
   %84 = trunc i10 %83 to i1
+  %85 = lshr exact i10 %param_0, i9 1
+  %86 = trunc i10 %85 to i1
   ret void
 
-85:                                               ; preds = %98
+87:                                               ; preds = %138
   ret void
 
-86:                                               ; No predecessors!
-  %87 = lshr exact i10 %param_0, i8 2
-  %88 = trunc i10 %87 to i1
-  %89 = lshr exact i10 %param_0, i9 1
-  %90 = trunc i10 %89 to i1
+88:                                               ; preds = %81
+  br label %95
+
+89:                                               ; No predecessors!
+  %90 = lshr exact i10 %param_0, i8 2
+  %91 = trunc i10 %90 to i1
+  %92 = lshr exact i10 %param_0, i9 1
+  %93 = trunc i10 %92 to i1
   ret void
 
-91:                                               ; preds = %98
+94:                                               ; preds = %138
   ret void
 
-92:                                               ; No predecessors!
-  %93 = lshr exact i10 %param_0, i8 2
-  %94 = trunc i10 %93 to i1
-  %95 = lshr exact i10 %param_0, i9 1
-  %96 = trunc i10 %95 to i1
+95:                                               ; preds = %88
+  br label %102
+
+96:                                               ; No predecessors!
+  %97 = lshr exact i10 %param_0, i8 2
+  %98 = trunc i10 %97 to i1
+  %99 = lshr exact i10 %param_0, i9 1
+  %100 = trunc i10 %99 to i1
   ret void
 
-97:                                               ; preds = %98
+101:                                              ; preds = %138
   ret void
 
-98:                                               ; preds = %198
-  %99 = trunc i10 %param_0 to i1
-  indirectbr i1 %99, [label %49, label %55, label %61, label %67, label %73, label %79, label %85, label %91, label %97]
+102:                                              ; preds = %95
+  br label %109
 
-100:                                              ; No predecessors!
-  %101 = lshr exact i10 %param_0, i8 2
-  %102 = trunc i10 %101 to i1
-  %103 = lshr exact i10 %param_0, i9 1
-  %104 = trunc i10 %103 to i1
+103:                                              ; No predecessors!
+  %104 = lshr exact i10 %param_0, i8 2
+  %105 = trunc i10 %104 to i1
+  %106 = lshr exact i10 %param_0, i9 1
+  %107 = trunc i10 %106 to i1
   ret void
 
-105:                                              ; preds = %106
+108:                                              ; preds = %138
   ret void
 
-106:                                              ; preds = %198
-  %107 = trunc i10 %param_0 to i1
-  indirectbr i1 %107, [label %105]
+109:                                              ; preds = %102
+  br label %116
 
-108:                                              ; No predecessors!
-  %109 = trunc i10 %param_0 to i3
+110:                                              ; No predecessors!
+  %111 = lshr exact i10 %param_0, i8 2
+  %112 = trunc i10 %111 to i1
+  %113 = lshr exact i10 %param_0, i9 1
+  %114 = trunc i10 %113 to i1
   ret void
 
-110:                                              ; preds = %198
+115:                                              ; preds = %138
   ret void
 
-111:                                              ; No predecessors!
-  %112 = trunc i10 %param_0 to i3
-  ret void
+116:                                              ; preds = %109
+  br label %123
 
-113:                                              ; preds = %198
-  ret void
-
-114:                                              ; No predecessors!
-  %115 = lshr exact i10 %param_0, i8 2
-  %116 = trunc i10 %115 to i1
-  %117 = trunc i10 %param_0 to i2
-  ret void
-
-118:                                              ; preds = %198
-  ret void
-
-119:                                              ; No predecessors!
-  %120 = lshr exact i10 %param_0, i8 2
+117:                                              ; No predecessors!
+  %118 = lshr exact i10 %param_0, i8 2
+  %119 = trunc i10 %118 to i1
+  %120 = lshr exact i10 %param_0, i9 1
   %121 = trunc i10 %120 to i1
-  %122 = lshr exact i10 %param_0, i9 1
-  %123 = trunc i10 %122 to i1
-  %124 = trunc i10 %param_0 to i1
   ret void
 
-125:                                              ; preds = %198
+122:                                              ; preds = %138
   ret void
 
-126:                                              ; No predecessors!
-  %127 = lshr exact i10 %param_0, i8 2
+123:                                              ; preds = %116
+  br label %130
+
+124:                                              ; No predecessors!
+  %125 = lshr exact i10 %param_0, i8 2
+  %126 = trunc i10 %125 to i1
+  %127 = lshr exact i10 %param_0, i9 1
   %128 = trunc i10 %127 to i1
   ret void
 
-129:                                              ; preds = %130
+129:                                              ; preds = %138
   ret void
 
-130:                                              ; preds = %140
-  %131 = lshr exact i10 %param_0, 1
-  %132 = trunc i10 %131 to i1
-  indirectbr i1 %132, [label %129]
+130:                                              ; preds = %123
+  br label %137
 
-133:                                              ; No predecessors!
-  %134 = lshr exact i10 %param_0, i8 2
+131:                                              ; No predecessors!
+  %132 = lshr exact i10 %param_0, i8 2
+  %133 = trunc i10 %132 to i1
+  %134 = lshr exact i10 %param_0, i9 1
   %135 = trunc i10 %134 to i1
   ret void
 
-136:                                              ; preds = %137
+136:                                              ; preds = %138
   ret void
 
-137:                                              ; preds = %140
-  %138 = lshr exact i10 %param_0, 1
-  %139 = trunc i10 %138 to i1
-  indirectbr i1 %139, [label %136]
+137:                                              ; preds = %130
+  ret void
 
-140:                                              ; preds = %198
+138:                                              ; preds = %72
+  indirectbr i1 %73, [label %80, label %87, label %94, label %101, label %108, label %115, label %122, label %129, label %136]
+
+139:                                              ; preds = %71
+  br label %151
+
+140:                                              ; preds = %269
   %141 = trunc i10 %param_0 to i1
-  indirectbr i1 %141, [label %130, label %137]
+  br label %150
 
 142:                                              ; No predecessors!
-  %143 = lshr exact i10 %param_0, i8 2
-  %144 = trunc i10 %143 to i1
-  %145 = lshr exact i10 %param_0, i9 1
-  %146 = trunc i10 %145 to i1
+  br label %149
+
+143:                                              ; No predecessors!
+  %144 = lshr exact i10 %param_0, i8 2
+  %145 = trunc i10 %144 to i1
+  %146 = lshr exact i10 %param_0, i9 1
+  %147 = trunc i10 %146 to i1
   ret void
 
-147:                                              ; preds = %196
+148:                                              ; preds = %150
   ret void
 
-148:                                              ; No predecessors!
-  %149 = lshr exact i10 %param_0, i8 2
-  %150 = trunc i10 %149 to i1
-  %151 = lshr exact i10 %param_0, i9 1
-  %152 = trunc i10 %151 to i1
+149:                                              ; preds = %142
   ret void
 
-153:                                              ; preds = %196
+150:                                              ; preds = %140
+  indirectbr i1 %141, [label %148]
+
+151:                                              ; preds = %139
+  br label %155
+
+152:                                              ; No predecessors!
+  %153 = trunc i10 %param_0 to i3
   ret void
 
-154:                                              ; No predecessors!
-  %155 = lshr exact i10 %param_0, i8 2
-  %156 = trunc i10 %155 to i1
-  %157 = lshr exact i10 %param_0, i9 1
-  %158 = trunc i10 %157 to i1
+154:                                              ; preds = %269
   ret void
 
-159:                                              ; preds = %196
+155:                                              ; preds = %151
+  br label %159
+
+156:                                              ; No predecessors!
+  %157 = trunc i10 %param_0 to i3
   ret void
+
+158:                                              ; preds = %269
+  ret void
+
+159:                                              ; preds = %155
+  br label %165
 
 160:                                              ; No predecessors!
   %161 = lshr exact i10 %param_0, i8 2
   %162 = trunc i10 %161 to i1
-  %163 = lshr exact i10 %param_0, i9 1
-  %164 = trunc i10 %163 to i1
+  %163 = trunc i10 %param_0 to i2
   ret void
 
-165:                                              ; preds = %196
+164:                                              ; preds = %269
   ret void
+
+165:                                              ; preds = %159
+  br label %173
 
 166:                                              ; No predecessors!
   %167 = lshr exact i10 %param_0, i8 2
   %168 = trunc i10 %167 to i1
   %169 = lshr exact i10 %param_0, i9 1
   %170 = trunc i10 %169 to i1
+  %171 = trunc i10 %param_0 to i1
   ret void
 
-171:                                              ; preds = %196
+172:                                              ; preds = %269
   ret void
 
-172:                                              ; No predecessors!
-  %173 = lshr exact i10 %param_0, i8 2
-  %174 = trunc i10 %173 to i1
-  %175 = lshr exact i10 %param_0, i9 1
-  %176 = trunc i10 %175 to i1
+173:                                              ; preds = %165
+  br label %200
+
+174:                                              ; preds = %269
+  %175 = trunc i10 %param_0 to i1
+  br label %199
+
+176:                                              ; No predecessors!
+  br label %187
+
+177:                                              ; preds = %199
+  %178 = lshr exact i10 %param_0, 1
+  %179 = trunc i10 %178 to i1
+  br label %186
+
+180:                                              ; No predecessors!
+  br label %185
+
+181:                                              ; No predecessors!
+  %182 = lshr exact i10 %param_0, i8 2
+  %183 = trunc i10 %182 to i1
   ret void
 
-177:                                              ; preds = %196
+184:                                              ; preds = %186
   ret void
 
-178:                                              ; No predecessors!
-  %179 = lshr exact i10 %param_0, i8 2
-  %180 = trunc i10 %179 to i1
-  %181 = lshr exact i10 %param_0, i9 1
-  %182 = trunc i10 %181 to i1
+185:                                              ; preds = %180
   ret void
 
-183:                                              ; preds = %196
-  ret void
+186:                                              ; preds = %177
+  indirectbr i1 %179, [label %184]
 
-184:                                              ; No predecessors!
-  %185 = lshr exact i10 %param_0, i8 2
-  %186 = trunc i10 %185 to i1
-  %187 = lshr exact i10 %param_0, i9 1
-  %188 = trunc i10 %187 to i1
-  ret void
+187:                                              ; preds = %176
+  br label %198
 
-189:                                              ; preds = %196
-  ret void
+188:                                              ; preds = %199
+  %189 = lshr exact i10 %param_0, 1
+  %190 = trunc i10 %189 to i1
+  br label %197
 
-190:                                              ; No predecessors!
-  %191 = lshr exact i10 %param_0, i8 2
-  %192 = trunc i10 %191 to i1
-  %193 = lshr exact i10 %param_0, i9 1
+191:                                              ; No predecessors!
+  br label %196
+
+192:                                              ; No predecessors!
+  %193 = lshr exact i10 %param_0, i8 2
   %194 = trunc i10 %193 to i1
   ret void
 
-195:                                              ; preds = %196
+195:                                              ; preds = %197
   ret void
 
-196:                                              ; preds = %198
-  %197 = trunc i10 %param_0 to i1
-  indirectbr i1 %197, [label %147, label %153, label %159, label %165, label %171, label %177, label %183, label %189, label %195]
+196:                                              ; preds = %191
+  ret void
 
-198:                                              ; preds = %201
-  %199 = lshr exact i10 %param_0, 3
-  %200 = trunc i10 %199 to i1
-  indirectbr i1 %200, [label %7, label %12, label %15, label %20, label %25, label %32, label %38, label %43, label %98, label %106, label %110, label %113, label %118, label %125, label %140, label %196]
+197:                                              ; preds = %188
+  indirectbr i1 %190, [label %195]
 
-201:                                              ; No predecessors!
-  br label %198
+198:                                              ; preds = %187
+  ret void
+
+199:                                              ; preds = %174
+  indirectbr i1 %175, [label %177, label %188]
+
+200:                                              ; preds = %173
+  br label %268
+
+201:                                              ; preds = %269
+  %202 = trunc i10 %param_0 to i1
+  br label %267
+
+203:                                              ; No predecessors!
+  br label %210
+
+204:                                              ; No predecessors!
+  %205 = lshr exact i10 %param_0, i8 2
+  %206 = trunc i10 %205 to i1
+  %207 = lshr exact i10 %param_0, i9 1
+  %208 = trunc i10 %207 to i1
+  ret void
+
+209:                                              ; preds = %267
+  ret void
+
+210:                                              ; preds = %203
+  br label %217
+
+211:                                              ; No predecessors!
+  %212 = lshr exact i10 %param_0, i8 2
+  %213 = trunc i10 %212 to i1
+  %214 = lshr exact i10 %param_0, i9 1
+  %215 = trunc i10 %214 to i1
+  ret void
+
+216:                                              ; preds = %267
+  ret void
+
+217:                                              ; preds = %210
+  br label %224
+
+218:                                              ; No predecessors!
+  %219 = lshr exact i10 %param_0, i8 2
+  %220 = trunc i10 %219 to i1
+  %221 = lshr exact i10 %param_0, i9 1
+  %222 = trunc i10 %221 to i1
+  ret void
+
+223:                                              ; preds = %267
+  ret void
+
+224:                                              ; preds = %217
+  br label %231
+
+225:                                              ; No predecessors!
+  %226 = lshr exact i10 %param_0, i8 2
+  %227 = trunc i10 %226 to i1
+  %228 = lshr exact i10 %param_0, i9 1
+  %229 = trunc i10 %228 to i1
+  ret void
+
+230:                                              ; preds = %267
+  ret void
+
+231:                                              ; preds = %224
+  br label %238
+
+232:                                              ; No predecessors!
+  %233 = lshr exact i10 %param_0, i8 2
+  %234 = trunc i10 %233 to i1
+  %235 = lshr exact i10 %param_0, i9 1
+  %236 = trunc i10 %235 to i1
+  ret void
+
+237:                                              ; preds = %267
+  ret void
+
+238:                                              ; preds = %231
+  br label %245
+
+239:                                              ; No predecessors!
+  %240 = lshr exact i10 %param_0, i8 2
+  %241 = trunc i10 %240 to i1
+  %242 = lshr exact i10 %param_0, i9 1
+  %243 = trunc i10 %242 to i1
+  ret void
+
+244:                                              ; preds = %267
+  ret void
+
+245:                                              ; preds = %238
+  br label %252
+
+246:                                              ; No predecessors!
+  %247 = lshr exact i10 %param_0, i8 2
+  %248 = trunc i10 %247 to i1
+  %249 = lshr exact i10 %param_0, i9 1
+  %250 = trunc i10 %249 to i1
+  ret void
+
+251:                                              ; preds = %267
+  ret void
+
+252:                                              ; preds = %245
+  br label %259
+
+253:                                              ; No predecessors!
+  %254 = lshr exact i10 %param_0, i8 2
+  %255 = trunc i10 %254 to i1
+  %256 = lshr exact i10 %param_0, i9 1
+  %257 = trunc i10 %256 to i1
+  ret void
+
+258:                                              ; preds = %267
+  ret void
+
+259:                                              ; preds = %252
+  br label %266
+
+260:                                              ; No predecessors!
+  %261 = lshr exact i10 %param_0, i8 2
+  %262 = trunc i10 %261 to i1
+  %263 = lshr exact i10 %param_0, i9 1
+  %264 = trunc i10 %263 to i1
+  ret void
+
+265:                                              ; preds = %267
+  ret void
+
+266:                                              ; preds = %259
+  ret void
+
+267:                                              ; preds = %201
+  indirectbr i1 %202, [label %209, label %216, label %223, label %230, label %237, label %244, label %251, label %258, label %265]
+
+268:                                              ; preds = %200
+  ret void
+
+269:                                              ; preds = %1
+  indirectbr i1 %3, [label %5, label %30, label %34, label %40, label %46, label %48, label %64, label %70, label %72, label %140, label %154, label %158, label %164, label %172, label %174, label %201]
+
+270:                                              ; preds = %0
+  br label %1
 }
