@@ -1,3 +1,7 @@
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Compiler where
 
 import qualified LLVM.AST                      as AST
@@ -12,18 +16,21 @@ import qualified LLVM.IRBuilder.Monad          as LL
 
 import           Chip.Decoder
 import           Chip.Instruction
+import Control.Monad.Trans.State.Strict
 import Data.Foldable (toList)
 import Data.Bifunctor (second)
 import qualified Data.Map
+import qualified LLVM.AST.AddrSpace as AST
+import Data.List (genericLength)
 
 int n = AST.ConstantOperand . AST.C.Int (fromIntegral n) . fromIntegral
 intType = AST.T.IntegerType . fromIntegral
 
-operandWidth :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> m Int 
+operandWidth :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> m Int
 operandWidth operand = do
   aa <- AST.T.typeOf operand
   let Right (AST.T.IntegerType wd) = aa
-  pure wd
+  pure $ fromIntegral wd
 
 operandDecoder :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> (Int, Int) -> m AST.Operand
 operandDecoder operand (lo, hi) = do
@@ -36,29 +43,48 @@ operandDecoder operand (lo, hi) = do
 
 -- | Compiles an abstract decode tree into LLVM.
 compileDecoder
-  :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) =>
-  (Instruction AST.Operand -> m a)
+  :: forall m part. (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m, Bounded part, Enum part, Ord part) =>
+  (Instruction AST.Operand -> m AST.Name)
   -> Decoder part
   -> AST.Operand
-  -> m a
+  -> m AST.Name
 compileDecoder compileInst (Case inst) operand = do
   inst' <- mapM (operandDecoder operand) inst
   compileInst inst'
-compileDecoder compileInst (Switch n cases) operand = do  
+compileDecoder compileInst (Switch n cases) operand = do
   wd <- operandWidth operand
   x1 <- if n == 0 then pure operand else LL.I.lshr operand (int wd n)
   x2 <- LL.I.trunc x1 (AST.T.IntegerType 1)
 
   -- compile each branch into a block
-  let rec x = compileDecoder compileInst x operand
-  cases' <- Data.Map.fromList <$> traverse (\(a,b) -> (a,) <$> rec b) (Data.Map.toList cases)
+  let compileCase x = nested $ compileDecoder compileInst x operand
+  cases' <- nested $ traverse compileCase cases
+
+  let bbName (AST.BasicBlock nm _ _) = nm
+  errorBlock <- pure ()
 
   -- build jump table 
-  
+  let func = AST.Name "f"
+  let keys = [minBound..maxBound] :: [part]
+  let jumpTy = AST.T.PointerType (AST.AddrSpace 0)
+  let jumpsTy = AST.T.VectorType (genericLength keys) jumpTy
+  jumpsName <- LL.freshName "decode_table"
+  let jumpTarget key = maybe (AST.C.Int 1 0) (AST.C.BlockAddress func) $ Data.Map.lookup key cases'
+  _ <- LL.M.global jumpsName jumpsTy (AST.C.Array jumpTy (fmap jumpTarget keys))
 
+  LL.emitTerm $ AST.IndirectBr x2 (Data.Map.elems cases') []
 
   -- branch based on bit
-  pure _
+  LL.currentBlock
+
+nested :: (LL.MonadIRBuilder m) => m a -> m a
+nested ir = do 
+  before <- LL.liftIRState $ gets LL.builderBlock 
+  LL.liftIRState $ modify $ \s -> s { LL.builderBlock = Nothing }
+  result <- ir 
+  LL.block
+  LL.liftIRState $ modify $ \s -> s { LL.builderBlock = before } 
+  pure result
 
 {-
 we have `Instruction (Int,Int)`, instructions whose arguments are (Int,Int)
