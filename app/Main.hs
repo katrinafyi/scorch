@@ -35,14 +35,14 @@ llmodule = IRB.M.buildModule "asdf" $ do
                  (\[x] -> void $ Compiler.operandDecoder x (1, 3))
 
 llmodule2 = IRB.M.buildModule "df" $ do
-  IRB.M.function "f" [(AST.T.IntegerType 10, "param")] AST.T.VoidType $ \[x] ->
+  IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.VoidType $ \[x] ->
     do
       
-      nm <- Compiler.nested $ Compiler.compileDecoder
-        (\x -> IRB.block)
+      Compiler.compileDecoder
+        (\x -> IRB.currentBlock)
         Chip.Decoder.decode
         x
-      IRB.I.br nm
+      pure ()
 
 
 main :: IO ()
