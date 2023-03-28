@@ -16,61 +16,82 @@ import qualified LLVM.IRBuilder.Monad          as LL
 
 import           Chip.Decoder
 import           Chip.Instruction
-import Control.Monad.Trans.State.Strict
-import Data.Foldable (toList)
-import Data.Bifunctor (second)
+import           Control.Arrow                  ( (&&&)
+                                                , (***)
+                                                , first
+                                                )
+import           Control.Monad                  ( void )
+import           Control.Monad.Trans.State.Strict
+import           Data.Bifunctor                 ( second )
+import           Data.Foldable                  ( toList )
+import           Data.List                      ( genericLength )
 import qualified Data.Map
-import qualified LLVM.AST.AddrSpace as AST
-import Data.List (genericLength)
-import Control.Arrow ((&&&), (***), first)
-import Data.String (fromString)
-import Control.Monad (void)
-import LLVM.IRBuilder.Internal.SnocList (SnocList(..))
+import           Data.String                    ( fromString )
+import qualified LLVM.AST.AddrSpace            as AST
+import           LLVM.IRBuilder.Internal.SnocList
+                                                ( SnocList(..) )
 
 int n = AST.ConstantOperand . AST.C.Int (fromIntegral n) . fromIntegral
 intType = AST.T.IntegerType . fromIntegral
 
-operandWidth :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> m Int
+operandWidth
+  :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> m Int
 operandWidth operand = do
   aa <- AST.T.typeOf operand
   let Right (AST.T.IntegerType wd) = aa
   pure $ fromIntegral wd
 
-operandDecoder :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) => AST.Operand -> (Int, Int) -> m AST.Operand
-operandDecoder operand (lo, hi) = do
+operandDecoder
+  :: (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m)
+  => Int
+  -> AST.Operand
+  -> (Int, Int)
+  -> m AST.Operand
+operandDecoder bits operand (lo, hi) = do
   -- let (lo,hi) = (lo' * 4, hi' * 4)
-  wd <- (`div` 4) <$> operandWidth operand
-  let wd1 = wd - lo
-  x1 <- if lo == 0 then pure operand else LL.I.lshr operand (int (4*wd) (lo*4))
+  opWd <- (`div` bits) <$> operandWidth operand
+  let wd1 = opWd - lo
+  x1 <- if lo == 0
+    then pure operand
+    else LL.I.lshr operand (int (bits * opWd) (lo * bits))
   -- let x1 = undefined
-  if hi - lo + 1 == wd1 then pure x1 else LL.I.trunc x1 (intType (4 * (hi - lo + 1)))
+  if hi - lo + 1 == wd1
+    then pure x1
+    else LL.I.trunc x1 (intType (bits * (hi - lo + 1)))
 
 
 -- | Compiles an abstract decode tree into LLVM.
 compileDecoder
-  :: forall m part. (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m, Bounded part, Enum part, Ord part) =>
-  (Instruction AST.Operand -> m AST.Name)
+  :: forall m part
+   . ( LL.MonadIRBuilder m
+     , LL.M.MonadModuleBuilder m
+     , Bounded part
+     , Enum part
+     , Ord part
+     )
+  => (Instruction AST.Operand -> m AST.Name)
+  -> Int
   -> Decoder part
   -> AST.Operand
   -> m AST.Name
-compileDecoder compileInst (Case inst) operand = do
+compileDecoder compileInst bits (Case inst) operand = do
   let f = AST.Name (fromString $ show inst)
-  fn <- LL.M.extern f [] AST.T.VoidType
-  _ <- LL.I.call (AST.T.FunctionType AST.T.VoidType [] False) fn []
+  fn    <- LL.M.extern f [] AST.T.VoidType
+  _     <- LL.I.call (AST.T.FunctionType AST.T.VoidType [] False) fn []
   -- LL.modifyBlock (\p -> p { LL.partialBlockName = f })
-  inst' <- mapM (operandDecoder operand) inst
+  inst' <- mapM (operandDecoder bits operand) inst
   compileInst inst'
-compileDecoder compileInst (Switch n cases) operand = do
+compileDecoder compileInst bits (Switch n cases) operand = do
   LL.ensureBlock
-  name <- LL.currentBlock
+  name       <- LL.currentBlock
 
-  wd <- operandWidth operand
-  x1 <- if n == 0 then pure operand else LL.I.lshr operand (int wd (4*n))
-  x2 <- LL.I.trunc x1 (AST.T.IntegerType 4)
+  wd         <- operandWidth operand
+  x1 <- if n == 0 then pure operand else LL.I.lshr operand (int wd (bits * n))
+  x2         <- LL.I.trunc x1 (AST.T.IntegerType (fromIntegral bits))
 
   -- compile each branch into a block
   errorBlock <- nestedWithName "error" LL.currentBlock
-  let compileCase x = nested $ compileDecoder compileInst x operand
+  let compileCase x = nested $ compileDecoder compileInst bits x operand
   cases' <- traverse compileCase cases
 
 
@@ -85,7 +106,8 @@ compileDecoder compileInst (Switch n cases) operand = do
 
   -- branch based on bit
   -- LL.emitTerm $ AST.IndirectBr x2 (Data.Map.elems cases') []
-  let k = first (AST.C.Int 4 . fromIntegral . fromEnum) <$> Data.Map.toList cases'
+  let k = first (AST.C.Int 4 . fromIntegral . fromEnum)
+        <$> Data.Map.toList cases'
   LL.I.switch x2 errorBlock k
 
   pure name
@@ -98,7 +120,7 @@ nestedWithName nm ir = do
   before <- LL.liftIRState $ gets LL.builderBlock
   case before of
     Nothing -> ir
-    Just _ -> do
+    Just _  -> do
       tailName <- LL.fresh
       LL.I.br tailName
       name <- if null nm then LL.fresh else LL.freshName (fromString nm)
