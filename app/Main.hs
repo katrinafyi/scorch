@@ -32,15 +32,15 @@ llmodule = IRB.M.buildModule "asdf" $ do
     -- (const $ IRB.emitTerm
       -- (AST.I.Ret (Just (AST.ConstantOperand (AST.C.Int 31 23))) [])
     -- )
-                 (\[x] -> void $ Compiler.operandDecoder 4 x (1, 3))
+                --  (\[x] -> void $ Compiler.operandDecoder 4 x (1, 3))
+                undefined
 
 llmodule2 = IRB.M.buildModule "df" $ do
   IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.VoidType $ \[x] ->
     do
       
       Compiler.compileDecoder
-        (\x -> IRB.currentBlock)
-        4
+        (Compiler.llvmCompilerImpl (\x -> IRB.currentBlock))
         Chip.Decoder.decode
         x
       pure ()

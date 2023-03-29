@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Compiler where
 
@@ -43,6 +44,7 @@ data CompilerImplementation operand part result m =
     int :: Int -> Int -> operand,
     lshr :: operand -> operand -> m operand,
     trunc :: operand -> Int -> m operand,
+    nest :: forall a. m a -> m a,
 
     compileInst :: Instruction operand -> m result,
     switch :: Data.Map.Map part result -> operand -> m result
@@ -57,6 +59,7 @@ data CompilerImplementation operand part result m =
 
 operandDecoder
   ::
+  Monad m =>
   CompilerImplementation operand part result m
   -> operand
   -> (Int, Int)
@@ -70,7 +73,7 @@ operandDecoder comp operand (lo, hi) = do
   -- let x1 = undefined
   if hi - lo + 1 == wd1
     then pure x1
-    else comp.trunc x1 (comp.partWd * (hi - lo + 1))
+    else comp.trunc x1 (comp.partWidth * (hi - lo + 1))
 
 
 {-
@@ -156,19 +159,18 @@ compileDecoder
   :: forall operand part result m.
   (Monad m) =>
   CompilerImplementation operand part result m ->
-  (Instruction operand -> m result)
-  -> Decoder part
+  Decoder part
   -> operand
   -> m result
-compileDecoder c compileInst (Case inst) operand = do
+compileDecoder c (Case inst) operand = do
   let f = AST.Name (fromString $ show inst)
   -- fn    <- LL.M.extern f [] AST.T.VoidType
   -- _     <- LL.I.call (AST.T.FunctionType AST.T.VoidType [] False) fn []
   -- LL.modifyBlock (\p -> p { LL.partialBlockName = f })
   inst' <- mapM (operandDecoder c operand) inst
-  compileInst inst'
+  c.compileInst inst'
 
-compileDecoder c compileInst (Switch n cases) operand = do
+compileDecoder c (Switch n cases) operand = do
   -- LL.ensureBlock
   -- name       <- LL.currentBlock
 
@@ -178,8 +180,8 @@ compileDecoder c compileInst (Switch n cases) operand = do
 
   -- compile each branch into a block
   -- errorBlock <- nestedWithName "error" LL.currentBlock
-  let compileCase x = compileDecoder c compileInst x operand
-  cases' <- traverse compileCase cases
+  let compileCase x = nest c $ compileDecoder c x operand
+  cases' <- nest c $ traverse compileCase cases
 
 
   -- build jump table 
@@ -198,3 +200,23 @@ compileDecoder c compileInst (Switch n cases) operand = do
   -- LL.I.switch x2 errorBlock k
 
   c.switch cases' x2
+
+llvmCompilerImpl ::
+  (LL.MonadIRBuilder m, LL.M.MonadModuleBuilder m) =>
+  (Instruction AST.Operand -> m AST.Name)
+  -> CompilerImplementation
+      AST.Operand Hex AST.Name m
+llvmCompilerImpl compileInst = CompilerImplementation 4 16 int lshr trunc nest compileInst switch
+  where
+    int wd n = AST.ConstantOperand $ AST.C.Int (fromIntegral wd) (fromIntegral n)
+    lshr = LL.I.lshr
+    trunc x n = LL.I.trunc x (intType n)
+    switch cases' x = do 
+      name <- LL.currentBlock
+      errorBlock <- nestedWithName "error" LL.currentBlock
+      -- LL.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
+      let k = first (AST.C.Int 4 . fromIntegral . fromEnum)
+            <$> Data.Map.toList cases'
+      LL.I.switch x errorBlock k
+      pure name
+    nest = nested
