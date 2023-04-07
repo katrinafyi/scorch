@@ -27,7 +27,10 @@ library
   exposed-modules:
       Chip.Decoder
       Chip.Instruction
-      Compiler
+      Chip.Semantics
+      Compiler.Backend
+      Compiler.Common
+      Compiler.Frontend
   other-modules:
       Paths_scorch
   hs-source-dirs:
@@ -35,6 +38,8 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , binary
+    , bytestring
     , containers
     , llvm-hs
     , llvm-hs-pure
@@ -50,6 +55,8 @@ executable scorch-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , binary
+    , bytestring
     , containers
     , llvm-hs
     , llvm-hs-pure
@@ -67,6 +74,8 @@ test-suite scorch-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , binary
+    , bytestring
     , containers
     , llvm-hs
     , llvm-hs-pure

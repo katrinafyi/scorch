@@ -25,6 +25,8 @@ dependencies:
 - llvm-hs
 - llvm-hs-pure
 - transformers
+- binary
+- bytestring
 
 ghc-options:
 - -Wall
