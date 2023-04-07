@@ -46,7 +46,6 @@ data CompilerImplementation operand part m =
     int :: Int -> Int -> operand,
     lshr :: operand -> operand -> m operand,
     trunc :: operand -> Int -> m operand,
-    nest :: forall a. m a -> m a,
 
     compileInst :: Instruction operand -> m (),
     switch :: Data.Map.Map part (m ()) -> operand -> m ()
@@ -156,7 +155,7 @@ we have `Instruction (Int,Int)`, instructions whose arguments are (Int,Int)
 
 -- | Compiles an abstract decode tree into LLVM.
 compileDecoder
-  :: forall operand part result m.
+  :: forall operand part m.
   (Monad m) =>
   CompilerImplementation operand part m ->
   Decoder part
@@ -211,7 +210,7 @@ llvmCompilerImpl ::
   (Instruction AST.Operand -> m ())
   -> CompilerImplementation
       AST.Operand Hex m
-llvmCompilerImpl compileInst = CompilerImplementation 4 16 int lshr trunc nest (compileInst) switch
+llvmCompilerImpl compileInst = CompilerImplementation 4 16 int lshr trunc compileInst switch
   where
     int wd n = AST.ConstantOperand $ AST.C.Int (fromIntegral wd) (fromIntegral n)
     lshr x y = AST.T.typeOf x >>= \t -> LL.emitInstr (fromRight' t) $ AST.I.LShr False x y []
@@ -220,8 +219,7 @@ llvmCompilerImpl compileInst = CompilerImplementation 4 16 int lshr trunc nest (
     switch cases x = do
       errorBlock <- nestedWithName "error" LL.currentBlock
       -- LL.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
-      let makeCase c = nest (LL.currentBlock <* c)
+      let makeCase c = nested (LL.currentBlock <* c)
       cases' <- Data.Map.toList <$> traverse makeCase cases
       let k = first (AST.C.Int 4 . fromIntegral . fromEnum) <$> cases'
       LL.I.switch x errorBlock k
-    nest = nested

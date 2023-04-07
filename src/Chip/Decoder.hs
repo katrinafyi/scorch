@@ -96,12 +96,3 @@ decode_Fxxx = Switch
     , (He, Case (inst2 LD (Reg I) vx))
     , (H8, Case (inst2 LD (Reg ST) vx))
     ]
-
-
-decode2 = Switch
-  3
-  [ 
-  (H1, Case (inst1 JP nnn))
-  -- , (H2, Case (inst1 CALL nnn))
-  -- , (H3, Case (inst2 SE vx kk))
-  ]

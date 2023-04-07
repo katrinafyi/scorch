@@ -9,9 +9,9 @@ import qualified LLVM.AST.Constant             as AST.C
 import qualified LLVM.AST.Instruction          as AST.I
 import qualified LLVM.AST.Type                 as AST.T
 import qualified LLVM.AST.Typed                as AST.T
+import qualified LLVM.IRBuilder.Constant       as IRB.C
 import qualified LLVM.IRBuilder.Instruction    as IRB.I
 import qualified LLVM.IRBuilder.Module         as IRB.M
-import qualified LLVM.IRBuilder.Constant         as IRB.C
 import qualified LLVM.IRBuilder.Monad          as IRB
 
 import qualified LLVM.Context                  as LL.C
@@ -36,39 +36,41 @@ llmodule = IRB.M.buildModule "asdf" $ do
       -- (AST.I.Ret (Just (AST.ConstantOperand (AST.C.Int 31 23))) [])
     -- )
                 --  (\[x] -> void $ Compiler.operandDecoder 4 x (1, 3))
-                undefined
+                 undefined
 
 llmodule2 = IRB.M.buildModule "df" $ do
   IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.VoidType $ \[x] ->
     do
       _ <- Compiler.compileDecoder
-        (Compiler.llvmCompilerImpl (\x -> do 
-          f <- IRB.M.extern (AST.Name $ fromString $ show x) [] AST.T.VoidType
-          IRB.I.call (AST.T.FunctionType AST.T.VoidType [] False) f []
-          pure ()))
+        (Compiler.llvmCompilerImpl
+          (\x -> do
+            f <- IRB.M.extern (AST.Name $ fromString $ show x) [] AST.T.VoidType
+            IRB.I.call (AST.T.FunctionType AST.T.VoidType [] False) f []
+            pure ()
+          )
+        )
         Chip.Decoder.decode
         x
       _ <- IRB.block
       pure ()
 
 llmodule3 = IRB.M.buildModule "df" $ do
-  IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.i8 $ \[x] ->
-    do
-      _ <- IRB.I.add x x
-      i <- Compiler.nested $ do 
-        _ <- IRB.I.sub x x
-        _ <- Compiler.nested $ do 
-          _ <- IRB.I.xor x x
-          pure ()
-        IRB.currentBlock
-      _ <- IRB.I.add x x
-      _ <- Compiler.nested $ do 
-        _ <- IRB.I.mul x x
+  IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.i8 $ \[x] -> do
+    _ <- IRB.I.add x x
+    i <- Compiler.nested $ do
+      _ <- IRB.I.sub x x
+      _ <- Compiler.nested $ do
+        _ <- IRB.I.xor x x
         pure ()
-      _ <- IRB.I.add x x
+      IRB.currentBlock
+    _ <- IRB.I.add x x
+    _ <- Compiler.nested $ do
+      _ <- IRB.I.mul x x
+      pure ()
+    _ <- IRB.I.add x x
 
-      _ <- IRB.I.ret (IRB.C.int8 10)
-      IRB.I.br i
+    _ <- IRB.I.ret (IRB.C.int8 10)
+    IRB.I.br i
 
 
 main :: IO ()
