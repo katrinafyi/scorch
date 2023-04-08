@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Compiler.Common where
@@ -8,11 +7,6 @@ module Compiler.Common where
 import Chip.Decoder
 import Chip.Instruction
 import qualified Data.Map
-import qualified LLVM.AST.Type as AST.T
-
--- int n = AST.ConstantOperand . AST.C.Int (fromIntegral n) . fromIntegral
-intType :: Integral a => a -> AST.T.Type
-intType = AST.T.IntegerType . fromIntegral
 
 data CompilerImplementation operand m = CompilerImplementation
   { -- partWidth :: Int,

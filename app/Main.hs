@@ -11,46 +11,44 @@ import qualified Compiler.Backend as Compiler
 import Compiler.Common (CompilerImplementation)
 import qualified Compiler.Common as Compiler
 import qualified Compiler.Frontend as Compiler
-import Data.Functor (void)
 import qualified Data.Map as Map
-import Data.String
+import Data.String (IsString (fromString))
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Attribute as AST
-import qualified LLVM.AST.CallingConvention as AST.CC
-import qualified LLVM.AST.Type as AST.T
-import qualified LLVM.Context as LL.C
-import LLVM.IRBuilder (MonadIRBuilder)
-import qualified LLVM.IRBuilder.Constant as IRB.C
-import qualified LLVM.IRBuilder.Instruction as IRB.I
-import qualified LLVM.IRBuilder.Module as IRB.M
+import qualified LLVM.AST.CallingConvention as AST
+import qualified LLVM.AST.Type as AST
+import qualified LLVM.Context as LL
+import qualified LLVM.IRBuilder.Constant as IRB
+import qualified LLVM.IRBuilder.Instruction as IRB
+import qualified LLVM.IRBuilder.Module as IRB
 import qualified LLVM.IRBuilder.Monad as IRB
-import qualified LLVM.Module as LL.M
+import qualified LLVM.Module as LL
 import System.Environment (getArgs)
 
 llmodule :: AST.Module
-llmodule = IRB.M.buildModule "asdf" $ do
-  let i31 = AST.T.IntegerType 31
-  IRB.M.function
+llmodule = IRB.buildModule "asdf" $ do
+  let i31 = AST.IntegerType 31
+  IRB.function
     "f"
-    [(AST.T.IntegerType 10, "param")]
+    [(AST.IntegerType 10, "param")]
     i31
     -- (const $ IRB.emitTerm
-    -- (AST.I.Ret (Just (AST.ConstantOperand (AST.C.Int 31 23))) [])
+    -- (AST.Ret (Just (AST.ConstantOperand (AST.Int 31 23))) [])
     -- )
     --  (\[x] -> void $ Compiler.operandDecoder 4 x (1, 3))
     undefined
 
-chipImpl :: (IRB.MonadIRBuilder m, IRB.M.MonadModuleBuilder m) => CompilerImplementation AST.Operand m
+chipImpl :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => CompilerImplementation AST.Operand m
 chipImpl =
   Compiler.llvmCompilerImpl
     ( \x -> do
-        f <- IRB.M.extern (AST.Name $ fromString $ show x) [] AST.T.VoidType
-        _ <- IRB.I.call (AST.T.FunctionType AST.T.VoidType [] False) f []
+        f <- IRB.extern (AST.Name $ fromString $ show x) [] AST.VoidType
+        _ <- IRB.call (AST.FunctionType AST.VoidType [] False) f []
         pure ()
     )
 
-llmodule2 = IRB.M.buildModule "df" $ do
-  IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.VoidType $ \[x] ->
+llmodule2 = IRB.buildModule "df" $ do
+  IRB.function "f" [(AST.IntegerType 16, "param")] AST.VoidType $ \[x] ->
     do
       _ <-
         Compiler.compileDecoder
@@ -62,46 +60,46 @@ llmodule2 = IRB.M.buildModule "df" $ do
       _ <- IRB.block
       pure ()
 
-llmodule3 = IRB.M.buildModule "df" $ do
-  IRB.M.function "f" [(AST.T.IntegerType 16, "param")] AST.T.i8 $ \[x] -> do
-    _ <- IRB.I.add x x
+llmodule3 = IRB.buildModule "df" $ do
+  IRB.function "f" [(AST.IntegerType 16, "param")] AST.i8 $ \[x] -> do
+    _ <- IRB.add x x
     i <- Compiler.nested $ do
-      _ <- IRB.I.sub x x
+      _ <- IRB.sub x x
       _ <- Compiler.nested $ do
-        _ <- IRB.I.xor x x
+        _ <- IRB.xor x x
         pure ()
       IRB.currentBlock
-    _ <- IRB.I.add x x
+    _ <- IRB.add x x
     _ <- Compiler.nested $ do
-      _ <- IRB.I.mul x x
+      _ <- IRB.mul x x
       pure ()
-    _ <- IRB.I.add x x
+    _ <- IRB.add x x
 
-    _ <- IRB.I.ret (IRB.C.int8 10)
-    IRB.I.br i
+    _ <- IRB.ret (IRB.int8 10)
+    IRB.br i
 
-emitDecoder :: (IRB.MonadIRBuilder m, IRB.M.MonadModuleBuilder m) => m (AST.T.Type, AST.Operand)
+emitDecoder :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => m (AST.Type, AST.Operand)
 emitDecoder = do
-  let argtys = [AST.T.IntegerType 16]
-  let retty = AST.T.VoidType
-  fun <- IRB.M.function "interpret" (fmap (,IRB.M.NoParameterName) argtys) retty $ \[x] -> do
+  let argtys = [AST.IntegerType 16]
+  let retty = AST.VoidType
+  fun <- IRB.function "interpret" (fmap (,IRB.NoParameterName) argtys) retty $ \[x] -> do
     Compiler.compileDecoder
       chipImpl
       Chip.Decoder.decode
       4
       x
 
-  pure (AST.T.FunctionType retty argtys False, fun)
+  pure (AST.FunctionType retty argtys False, fun)
 
 callInst ::
-  AST.T.Type ->
+  AST.Type ->
   AST.Operand ->
   [(AST.Operand, [AST.ParameterAttribute])] ->
   AST.Instruction
 callInst funty fun args =
   AST.Call
     { AST.tailCallKind = Nothing,
-      AST.callingConvention = AST.CC.C,
+      AST.callingConvention = AST.C,
       AST.returnAttributes = [],
       AST.type' = funty,
       AST.function = Right fun,
@@ -111,14 +109,14 @@ callInst funty fun args =
     }
 
 llmodule4 :: AST.Module
-llmodule4 = IRB.M.buildModule "module" $ do
-  IRB.M.function "run" [(AST.T.IntegerType 16, "param")] AST.T.VoidType $ \[pc] ->
+llmodule4 = IRB.buildModule "module" $ do
+  IRB.function "run" [(AST.IntegerType 16, "param")] AST.VoidType $ \[pc] ->
     do
-      op <- IRB.I.add pc pc
+      op <- IRB.add pc pc
       (interpretTy, interpretFun) <- emitDecoder
       interpretBlock <-
         Compiler.nestedWithName "default_interpret" $
-          IRB.currentBlock <* IRB.I.call interpretTy interpretFun [(op, [])]
+          IRB.currentBlock <* IRB.call interpretTy interpretFun [(op, [])]
       let interpret op = do
             let (ty, fun) = (interpretTy, interpretFun)
             let args = [(op, [])]
@@ -126,7 +124,7 @@ llmodule4 = IRB.M.buildModule "module" $ do
               AST.ConstantOperand _ ->
                 IRB.emitInstrVoid $
                   (callInst ty fun args) {AST.functionAttributes = [Right AST.AlwaysInline]}
-              _ -> IRB.I.br interpretBlock
+              _ -> IRB.br interpretBlock
       _ <-
         Compiler.frontend
           chipImpl
@@ -140,10 +138,10 @@ main :: IO ()
 main = do
   [fname] <- getArgs
 
-  LL.C.withContext
+  LL.withContext
     ( \c ->
-        LL.M.withModuleFromAST
+        LL.withModuleFromAST
           c
           llmodule4
-          (LL.M.writeLLVMAssemblyToFile (LL.M.File fname))
+          (LL.writeLLVMAssemblyToFile (LL.File fname))
     )
