@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use camelCase" #-}
 
 module Chip.LLVM.Semantics where
@@ -25,9 +26,6 @@ if' c t f = do
   t' <- nestedBlock t
   f' <- nestedBlock f
   IRB.condBr c t' f'
-
-wordType :: AST.Type
-wordType = AST.IntegerType 16
 
 word :: Integral a => a -> AST.Operand
 word n = AST.ConstantOperand $ AST.Int 16 $ fromIntegral n
@@ -52,22 +50,34 @@ ireg_loop ::
   AST.Operand ->
   m ()
 ireg_loop Externs {..} f nmax = do
+  let load x = IRB.load wordType x 8
+  let store x = IRB.store x 8
+  let inc x = load x >>= IRB.add (word 1) >>= store x
+
   i <- IRB.alloca wordType Nothing 8
-  IRB.store i 8 =<< reg_read I
+  store i =<< reg_read I
 
   n <- IRB.alloca wordType Nothing 8
-  IRB.store n 8 (word 0)
+  store n (word 0)
 
-  let loop =  undefined
-
-  start <- nestedBlock $
-    do
-      n' <- IRB.load wordType n 8
-      cond <- IRB.icmp AST.ULE n' nmax
-
-      if' cond
+  start <- IRB.fresh
+  end <- IRB.fresh
 
   IRB.br start
+
+  IRB.emitBlockStart start
+  n' <- load n
+  cond <- IRB.icmp AST.ULE n' nmax
+
+  let loop = do
+        f i n
+        inc n
+        inc i
+        IRB.br start
+
+  if' cond loop (IRB.br end)
+
+  IRB.emitBlockStart end
 
 semantics :: forall m. (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => Externs AST.Operand m -> Instruction AST.Operand -> m ()
 semantics externs@Externs {..} = \case
@@ -150,18 +160,24 @@ semantics externs@Externs {..} = \case
     display_sprite digit
       >>= reg_write I
   Inst LD B (Reg (V v)) _ ->
-    undefined
-  Inst LD Iref (Reg (V v)) _ ->
-    undefined
-  Inst LD (Reg (V v)) Iref _ ->
-    undefined
-  Inst SCD _ _ _ -> undefined
-  Inst SCR _ _ _ -> undefined
-  Inst SCL _ _ _ -> undefined
-  Inst EXIT _ _ _ -> undefined
-  Inst LOW _ _ _ -> undefined
-  Inst HIGH _ _ _ -> undefined
-  _ -> undefined
+    pure ()
+  Inst LD Iref (Reg (V nmax)) _ ->
+    ireg_loop
+      externs
+      (\i v -> reg_read (V v) >>= mem_write i)
+      nmax
+  Inst LD (Reg (V nmax)) Iref _ ->
+    ireg_loop
+      externs
+      (\i v -> mem_read i >>= reg_write (V v))
+      nmax
+  -- Inst SCD _ _ _ -> undefined
+  -- Inst SCR _ _ _ -> undefined
+  -- Inst SCL _ _ _ -> undefined
+  -- Inst EXIT _ _ _ -> undefined
+  -- Inst LOW _ _ _ -> undefined
+  -- Inst HIGH _ _ _ -> undefined
+  inst -> chip_warn (show inst)
   where
     skipIf cond x y = do
       c <- bindM2 (IRB.icmp cond) x y

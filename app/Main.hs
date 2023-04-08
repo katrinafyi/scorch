@@ -6,13 +6,16 @@ module Main
   )
 where
 
-import qualified Chip.Decoder
+import qualified Chip.Decoder as Chip
+import qualified Chip.Instruction as Chip
+import qualified Chip.LLVM.Extern as Chip
+import qualified Chip.LLVM.Semantics as Chip
 import qualified Compiler.Backend as Compiler
-import Compiler.Common (CompilerImplementation)
-import qualified Compiler.Common as Compiler
+import Compiler.Common (CompilerImplementation (CompilerImplementation))
 import qualified Compiler.Frontend as Compiler
-import qualified Compiler.Loader as Compiler
 import qualified Compiler.LLVM as Compiler
+import qualified Compiler.Loader as Compiler
+import Control.Monad.Trans.Class
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Map as Map
 import Data.String (IsString (fromString))
@@ -42,28 +45,6 @@ llmodule = IRB.buildModule "asdf" $ do
     --  (\[x] -> void $ Compiler.operandDecoder 4 x (1, 3))
     undefined
 
-chipImpl :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => CompilerImplementation AST.Operand m
-chipImpl =
-  Compiler.llvmCompilerImpl
-    ( \x -> do
-        f <- IRB.extern (AST.Name $ fromString $ show x) [] AST.VoidType
-        _ <- IRB.call (AST.FunctionType AST.VoidType [] False) f []
-        pure ()
-    )
-
-llmodule2 = IRB.buildModule "df" $ do
-  IRB.function "f" [(AST.IntegerType 16, "param")] AST.VoidType $ \[x] ->
-    do
-      _ <-
-        Compiler.compileDecoder
-          ( chipImpl
-          )
-          Chip.Decoder.decode
-          4
-          x
-      _ <- IRB.block
-      pure ()
-
 llmodule3 = IRB.buildModule "df" $ do
   IRB.function "f" [(AST.IntegerType 16, "param")] AST.i8 $ \[x] -> do
     _ <- IRB.add x x
@@ -81,19 +62,6 @@ llmodule3 = IRB.buildModule "df" $ do
 
     _ <- IRB.ret (IRB.int8 10)
     IRB.br i
-
-emitDecoder :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => m (AST.Type, AST.Operand)
-emitDecoder = do
-  let argtys = [AST.IntegerType 16]
-  let retty = AST.VoidType
-  fun <- IRB.function "interpret" (fmap (,IRB.NoParameterName) argtys) retty $ \[x] -> do
-    Compiler.compileDecoder
-      chipImpl
-      Chip.Decoder.decode
-      4
-      x
-
-  pure (AST.FunctionType retty argtys False, fun)
 
 callInst ::
   AST.Type ->
@@ -114,10 +82,23 @@ callInst funty fun args =
 
 compile :: Map.Map Integer Integer -> AST.Module
 compile prog = IRB.buildModule "module" $ do
+  externs <- Chip.llvmChipExterns
+  let semantics = Chip.semantics externs
+  let chipImpl = Compiler.llvmCompilerImpl semantics
+
+  let argtys = [AST.IntegerType 16]
+  let retty = AST.VoidType
+  let interpretTy = AST.FunctionType retty argtys False
+  interpretFun <- IRB.function "interpret" (fmap (,IRB.NoParameterName) argtys) retty $ \[x] -> do
+    Compiler.compileDecoder
+      chipImpl
+      Chip.decode
+      4
+      x
+
   IRB.function "run" [(AST.IntegerType 16, "pc")] AST.VoidType $ \[pc] ->
     do
       op <- IRB.add pc pc
-      (interpretTy, interpretFun) <- emitDecoder
       interpretBlock <-
         Compiler.nestedWithName "default_interpret" $
           IRB.currentBlock <* IRB.call interpretTy interpretFun [(op, [])]
