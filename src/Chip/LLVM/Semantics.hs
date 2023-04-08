@@ -11,7 +11,7 @@ module Chip.LLVM.Semantics where
 import Chip.Instruction
 import Chip.LLVM.Extern
 import Compiler.LLVM
-import Control.Applicative (liftA2)
+import Control.Applicative (Alternative (empty), liftA2)
 import Control.Monad (join, void, (>=>))
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as AST
@@ -30,8 +30,15 @@ if' c t f = do
 word :: Integral a => a -> AST.Operand
 word n = AST.ConstantOperand $ AST.Int 16 $ fromIntegral n
 
+ext :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => AST.Operand -> m AST.Operand
+ext x = do
+  wd <- width x
+  if wd == 16
+    then pure x
+    else IRB.zext x wordType
+
 vf :: Register AST.Operand
-vf = V (word 0)
+vf = V (word 0xf)
 
 pc_inc2 ::
   (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) =>
@@ -79,8 +86,8 @@ ireg_loop Externs {..} f nmax = do
 
   IRB.emitBlockStart end
 
-semantics :: forall m. (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => Externs AST.Operand m -> Instruction AST.Operand -> m ()
-semantics externs@Externs {..} = \case
+semantics' :: forall m. (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => Externs AST.Operand m -> Instruction AST.Operand -> m ()
+semantics' externs@Externs {..} = \case
   Inst CLS _ _ _ ->
     display_clear
   Inst RET _ _ _ ->
@@ -97,9 +104,9 @@ semantics externs@Externs {..} = \case
       >>= stack_push
       >> pc_write addr
   Inst SE (Reg reg) (Imm kk) _ ->
-    skipIf AST.EQ (reg_read reg) (pure kk)
+    skipIf AST.EQ (reg_read reg) (ext kk)
   Inst SNE (Reg reg) (Imm kk) _ ->
-    skipIf AST.NE (reg_read reg) (pure kk)
+    skipIf AST.NE (reg_read reg) (ext kk)
   Inst SE (Reg reg) (Reg r2) _ ->
     skipIf AST.EQ (reg_read reg) (reg_read r2)
   Inst SNE (Reg reg) (Reg r2) _ ->
@@ -125,8 +132,10 @@ semantics externs@Externs {..} = \case
       reg_write vf =<< IRB.icmp AST.UGT x (word 255)
   Inst SUB (Reg dst) (Reg src) _ ->
     do
-      vf' <- bindM2 (IRB.icmp AST.UGT) (reg_read dst) (reg_read src)
-      void $ reg_modify2 IRB.sub dst src
+      x <- reg_read dst
+      y <- reg_read src
+      vf' <- IRB.icmp AST.UGT x y
+      reg_write dst =<< IRB.sub x y
       reg_write vf vf'
   Inst SHR (Reg dst) _ _ ->
     do
@@ -136,8 +145,10 @@ semantics externs@Externs {..} = \case
       reg_write vf lsb
   Inst SUBN (Reg dst) (Reg src) _ ->
     do
-      vf' <- bindM2 (IRB.icmp AST.ULT) (reg_read dst) (reg_read src)
-      void $ reg_modify2 (flip IRB.sub) dst src
+      x <- reg_read dst
+      y <- reg_read src
+      vf' <- IRB.icmp AST.UGT y x
+      reg_write dst =<< IRB.sub y x
       reg_write vf vf'
   Inst SHL (Reg dst) _ _ ->
     do
@@ -192,3 +203,12 @@ semantics externs@Externs {..} = \case
       x <- bindM2 f (reg_read dst) (reg_read src)
       reg_write dst x
       pure x
+
+semantics :: forall m. (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => Externs AST.Operand m -> Instruction AST.Operand -> m ()
+semantics externs@Externs {..} inst = do
+  inst' <- traverse ext inst
+  semantics' externs inst'
+  case inst of
+    Inst JP _ _ _ -> pure ()
+    Inst CALL _ _ _ -> pure ()
+    _ -> pc_inc2 externs

@@ -77,8 +77,8 @@ llvmChipExterns = do
   reg_write_i <- IRB.extern "reg_write_i" [w] VoidType
   reg_read_dt <- IRB.extern "reg_read_dt" [] w
   reg_write_dt <- IRB.extern "reg_write_dt" [w] VoidType
-  reg_read_st <- IRB.extern "reg_read_v" [] w
-  reg_write_st <- IRB.extern "reg_write_v" [w] VoidType
+  reg_read_st <- IRB.extern "reg_read_st" [] w
+  reg_write_st <- IRB.extern "reg_write_st" [w] VoidType
 
   rnd_byte_fun <- IRB.extern "rnd_byte" [] w
 

@@ -47,20 +47,27 @@ llvmCompilerImpl ::
   CompilerImplementation AST.Operand m
 llvmCompilerImpl compileInst = CompilerImplementation {..}
   where
+    partwd = 4
+
     width =
       AST.typeOf >=> \case
-        Right (AST.IntegerType wd) -> pure (fromIntegral wd)
+        Right (AST.IntegerType wd) -> pure (fromIntegral (wd `div` partwd))
         _ -> error "unsupported type for width calculation"
 
     int wd n =
       AST.ConstantOperand $
-        AST.Int (fromIntegral wd) (fromIntegral n)
+        AST.Int (partwd * fromIntegral wd) (fromIntegral n)
 
-    lshr x y =
-      AST.typeOf x
-        >>= \t -> IRB.emitInstr (fromRight' t) $ AST.LShr False x y []
+    lshr x y = do
+      t <- fromRight' <$> AST.typeOf x
+      y' <- IRB.mul (int 4 4) y
+      IRB.emitInstr t $ AST.LShr False x y' []
 
-    trunc x n = IRB.trunc x (intType n)
+    trunc x n = do
+      wd <- width x
+      if wd == n
+        then pure x
+        else IRB.trunc x (intType $ fromIntegral n * partwd)
 
     switch :: Map.Map Integer (m ()) -> m () -> AST.Operand -> m ()
     switch cases def x = do
@@ -68,7 +75,7 @@ llvmCompilerImpl compileInst = CompilerImplementation {..}
       -- IRB.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
       let makeCase c = nested (IRB.currentBlock <* c)
       cases' <- Map.toList <$> traverse makeCase cases
-      wd <- fromIntegral <$> width x
+      wd <- (partwd *) . fromIntegral <$> width x
       let k = first (AST.Int wd) <$> cases'
       IRB.switch x errorBlock k
 
@@ -86,3 +93,12 @@ lshr ::
 lshr x y = do
   t <- fromRight' <$> AST.typeOf x
   IRB.emitInstr t $ AST.LShr False x y []
+
+width ::
+  (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) =>
+  AST.Operand ->
+  m Int
+width =
+  AST.typeOf >=> \case
+    Right (AST.IntegerType wd) -> pure (fromIntegral (wd))
+    _ -> error "unsupported type for width calculation"
