@@ -11,6 +11,9 @@ import qualified Compiler.Backend as Compiler
 import Compiler.Common (CompilerImplementation)
 import qualified Compiler.Common as Compiler
 import qualified Compiler.Frontend as Compiler
+import qualified Compiler.Loader as Compiler
+import qualified Data.Binary.Get as B
+import qualified Data.ByteString.Lazy as B
 import qualified Data.Map as Map
 import Data.String (IsString (fromString))
 import qualified LLVM.AST as AST
@@ -23,6 +26,7 @@ import qualified LLVM.IRBuilder.Instruction as IRB
 import qualified LLVM.IRBuilder.Module as IRB
 import qualified LLVM.IRBuilder.Monad as IRB
 import qualified LLVM.Module as LL
+import qualified LLVM.Passes as LL
 import System.Environment (getArgs)
 
 llmodule :: AST.Module
@@ -108,9 +112,9 @@ callInst funty fun args =
       AST.metadata = []
     }
 
-llmodule4 :: AST.Module
-llmodule4 = IRB.buildModule "module" $ do
-  IRB.function "run" [(AST.IntegerType 16, "param")] AST.VoidType $ \[pc] ->
+compile :: Map.Map Integer Integer -> AST.Module
+compile prog = IRB.buildModule "module" $ do
+  IRB.function "run" [(AST.IntegerType 16, "pc")] AST.VoidType $ \[pc] ->
     do
       op <- IRB.add pc pc
       (interpretTy, interpretFun) <- emitDecoder
@@ -129,19 +133,31 @@ llmodule4 = IRB.buildModule "module" $ do
         Compiler.frontend
           chipImpl
           interpret
-          (Map.singleton 10 0x8123)
+          prog
           pc
           op
       pure ()
 
 main :: IO ()
 main = do
-  [fname] <- getArgs
+  [fname, oname] <- getArgs
+
+  bin <- B.readFile fname
+  let prog = Compiler.loadProgram bin
+
+  let passes =
+        LL.PassSetSpec
+          { LL.passes = [LL.AlwaysInline False, LL.CuratedPassSet 3],
+            LL.targetMachine = Nothing
+          }
 
   LL.withContext
     ( \c ->
         LL.withModuleFromAST
           c
-          llmodule4
-          (LL.writeLLVMAssemblyToFile (LL.File fname))
+          (compile prog)
+          ( \m -> do
+              -- LL.runPasses passes m
+              LL.writeLLVMAssemblyToFile (LL.File oname) m
+          )
     )

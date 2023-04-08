@@ -3,12 +3,6 @@
 module Compiler.Frontend where
 
 import Compiler.Common (CompilerImplementation (..))
-import Control.Applicative (liftA2)
-import Data.Binary
-import Data.Binary.Get
-  ( getWord16be,
-    isEmpty,
-  )
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
 
@@ -34,13 +28,6 @@ def step(pc):
     if not BranchTaken:
         pc += 2
 -}
-
-many :: Get a -> Get [a]
-many g = do
-  b <- isEmpty
-  if b then pure [] else liftA2 (:) g (many g)
-
-parse = many getWord16be
 
 -- | Emits frontend which implements the main instruction execution steps. 
 -- This switches on program counter values and either executes 

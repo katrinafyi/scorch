@@ -7,11 +7,9 @@ module Compiler.Backend where
 
 import Chip.Instruction
 import Compiler.Common
-import Control.Arrow
-  ( first,
-  )
 import Control.Monad ((>=>))
-import qualified Data.Map
+import Data.Bifunctor (first)
+import qualified Data.Map as Map
 import Data.String (fromString)
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as AST (Constant (Int))
@@ -61,12 +59,12 @@ llvmCompilerImpl compileInst = CompilerImplementation {..}
 
     trunc x n = IRB.trunc x (intType n)
 
-    switch :: Data.Map.Map Integer (m ()) -> m () -> AST.Operand -> m ()
+    switch :: Map.Map Integer (m ()) -> m () -> AST.Operand -> m ()
     switch cases def x = do
       errorBlock <- nestedWithName "default" (IRB.currentBlock <* def)
       -- IRB.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
       let makeCase c = nested (IRB.currentBlock <* c)
-      cases' <- Data.Map.toList <$> traverse makeCase cases
+      cases' <- Map.toList <$> traverse makeCase cases
       wd <- fromIntegral <$> width x
       let k = first (AST.Int wd) <$> cases'
       IRB.switch x errorBlock k
