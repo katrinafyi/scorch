@@ -70,7 +70,8 @@ llvmCompilerImpl compileInst = CompilerImplementation {..}
       -- LL.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
       let makeCase c = nested (LL.currentBlock <* c)
       cases' <- Data.Map.toList <$> traverse makeCase cases
-      let k = first (AST.C.Int 4) <$> cases'
+      wd <- fromIntegral <$> width x
+      let k = first (AST.C.Int wd) <$> cases'
       LL.I.switch x errorBlock k
 
     switchDefault = pure ()

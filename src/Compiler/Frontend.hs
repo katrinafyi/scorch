@@ -42,19 +42,28 @@ many g = do
 
 parse = many getWord16be
 
+-- | Emits frontend which implements the main instruction execution steps. 
+-- This switches on program counter values and either executes 
+-- the inlined code (if it matches the original program code) or interprets the opcode.
 frontend ::
   (Monad m) =>
   CompilerImplementation operand m ->
-  (operand -> m ()) ->
-  (operand -> m operand) ->
-  Map Integer Integer ->
-  operand ->
+  (operand -> m ()) ->    -- ^ opcode execution function
+  Map Integer Integer ->  -- ^ map of pc to op in original program code
+  operand -> -- ^ program counter  
+  operand -> -- ^ opcode at pc
   m ()
-frontend c runInst readMem prog pc = do
-  op <- readMem pc
+frontend c runInst prog pc op = do
   wd <- c.width op
 
   let constant = c.int wd
-  let makePcCase i op = let progop = prog ! i in switch c (Map.singleton progop (runInst (constant $ prog ! i))) (runInst op) op
+  let makePcCase i =
+        let progop = prog ! i
+         in c.switch
+              (Map.singleton progop (runInst (constant $ prog ! i)))
+              (runInst op)
+              op
+  
+  () <- switch c (Map.mapWithKey (const . makePcCase) prog) (runInst op) pc
 
   pure ()
