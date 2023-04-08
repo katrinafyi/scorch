@@ -1,72 +1,49 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Compiler.Backend where
 
-import Chip.Instruction
 import Compiler.Common
-import Control.Monad ((>=>))
-import Data.Bifunctor (first)
+import Chip.Decoder
 import qualified Data.Map as Map
-import Data.String (fromString)
-import qualified LLVM.AST as AST
-import qualified LLVM.AST.Constant as AST (Constant (Int))
-import qualified LLVM.AST.Typed as AST
-import qualified LLVM.IRBuilder.Instruction as IRB
-import qualified LLVM.IRBuilder.Module as IRB
-import qualified LLVM.IRBuilder.Monad as IRB
 
--- int n = AST.ConstantOperand . AST.C.Int (fromIntegral n) . fromIntegral
-intType :: Integral a => a -> AST.Type
-intType = AST.IntegerType . fromIntegral
 
-nested :: (IRB.MonadIRBuilder m) => m a -> m a
-nested = nestedWithName ""
+operandDecoder ::
+  Monad m =>
+  CompilerImplementation operand m ->
+  operand ->
+  (Int, Int) ->
+  m operand
+operandDecoder comp operand (lo, hi) = do
+  -- let (lo,hi) = (lo' * 4, hi' * 4)
+  opwd <- comp.width operand
+  let wd1 = opwd - lo
+  x1 <-
+    if lo == 0
+      then pure operand
+      else comp.lshr operand (comp.int opwd (fromIntegral lo))
+  -- let x1 = undefined
+  if hi - lo + 1 == wd1
+    then pure x1
+    else comp.trunc x1 (hi - lo + 1)
 
-nestedWithName :: (IRB.MonadIRBuilder m) => String -> m a -> m a
-nestedWithName nm ir = do
-  tailName <- IRB.freshName "cont"
-  IRB.br tailName
+-- | Compiles an abstract decode tree into LLVM.
+compileDecoder ::
+  forall operand part m.
+  (Monad m, Enum part) =>
+  CompilerImplementation operand m ->
+  Decoder part ->
+  Int ->
+  operand ->
+  m ()
+compileDecoder c (Case inst) _ operand = do
+  inst' <- mapM (operandDecoder c operand) inst
+  c.compileInst inst'
+compileDecoder c (Switch n cases) wd operand = do
+  let compileCase x = compileDecoder c x wd operand
+  opwd <- c.width operand
 
-  name <- if null nm then IRB.fresh else IRB.freshName (fromString nm)
-  IRB.emitBlockStart name
-  result <- ir
+  x1 <- if n == 0 then pure operand else c.lshr operand (c.int opwd (toInteger $ n * wd))
+  x2 <- c.trunc x1 wd
 
-  IRB.emitBlockStart tailName
-  pure result
-
-llvmCompilerImpl ::
-  forall m.
-  (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) =>
-  (Instruction AST.Operand -> m ()) ->
-  CompilerImplementation AST.Operand m
-llvmCompilerImpl compileInst = CompilerImplementation {..}
-  where
-    width =
-      AST.typeOf >=> \case
-        Right (AST.IntegerType wd) -> pure (fromIntegral wd)
-        _ -> error "unsupported type for width calculation"
-
-    int wd n =
-      AST.ConstantOperand $
-        AST.Int (fromIntegral wd) (fromIntegral n)
-
-    lshr x y =
-      AST.typeOf x
-        >>= \t -> IRB.emitInstr (fromRight' t) $ AST.LShr False x y []
-
-    trunc x n = IRB.trunc x (intType n)
-
-    switch :: Map.Map Integer (m ()) -> m () -> AST.Operand -> m ()
-    switch cases def x = do
-      errorBlock <- nestedWithName "default" (IRB.currentBlock <* def)
-      -- IRB.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
-      let makeCase c = nested (IRB.currentBlock <* c)
-      cases' <- Map.toList <$> traverse makeCase cases
-      wd <- fromIntegral <$> width x
-      let k = first (AST.Int wd) <$> cases'
-      IRB.switch x errorBlock k
-
-    switchDefault = pure ()
+  c.switch (Map.mapKeys (toInteger . fromEnum) $ fmap compileCase cases) c.switchDefault x2

@@ -12,7 +12,7 @@ import Compiler.Common (CompilerImplementation)
 import qualified Compiler.Common as Compiler
 import qualified Compiler.Frontend as Compiler
 import qualified Compiler.Loader as Compiler
-import qualified Data.Binary.Get as B
+import qualified Compiler.LLVM as Compiler
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Map as Map
 import Data.String (IsString (fromString))

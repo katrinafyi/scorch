@@ -27,10 +27,13 @@ library
   exposed-modules:
       Chip.Decoder
       Chip.Instruction
-      Chip.Semantics
+      Chip.LLVM.Data
+      Chip.LLVM.Extern
+      Chip.LLVM.Semantics
       Compiler.Backend
       Compiler.Common
       Compiler.Frontend
+      Compiler.LLVM
       Compiler.Loader
   other-modules:
       Paths_scorch

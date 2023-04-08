@@ -29,15 +29,15 @@ def step(pc):
         pc += 2
 -}
 
--- | Emits frontend which implements the main instruction execution steps. 
--- This switches on program counter values and either executes 
+-- | Emits frontend which implements the main instruction execution steps.
+-- This switches on program counter values and either executes
 -- the inlined code (if it matches the original program code) or interprets the opcode.
 frontend ::
   (Monad m) =>
   CompilerImplementation operand m ->
   (operand -> m ()) ->    -- ^ opcode execution function
   Map Integer Integer ->  -- ^ map of pc to op in original program code
-  operand -> -- ^ program counter  
+  operand -> -- ^ program counter
   operand -> -- ^ opcode at pc
   m ()
 frontend c runInst prog pc op = do
@@ -50,7 +50,7 @@ frontend c runInst prog pc op = do
               (Map.singleton progop (runInst (constant $ prog ! i)))
               (runInst op)
               op
-  
-  () <- switch c (Map.mapWithKey (const . makePcCase) prog) (runInst op) pc
+
+  () <- c.switch (Map.mapWithKey (const . makePcCase) prog) (runInst op) pc
 
   pure ()
