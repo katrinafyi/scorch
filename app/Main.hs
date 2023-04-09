@@ -93,7 +93,6 @@ compile prog = IRB.buildModule "module" $ do
     Compiler.compileDecoder
       chipImpl
       Chip.decode
-      4
       x
 
   IRB.function "run" [(AST.IntegerType 16, "pc")] AST.VoidType $ \[pc] ->
@@ -138,7 +137,7 @@ main = do
           c
           (compile prog)
           ( \m -> do
-              -- LL.runPasses passes m
+              LL.runPasses passes m
               LL.writeLLVMAssemblyToFile (LL.File oname) m
           )
     )

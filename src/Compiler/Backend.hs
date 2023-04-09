@@ -8,24 +8,24 @@ import Chip.Decoder
 import qualified Data.Map as Map
 
 
-operandDecoder ::
+slice ::
   Monad m =>
   CompilerImplementation operand m ->
   operand ->
-  (Int, Int) ->
+  Slice ->
   m operand
-operandDecoder comp operand (lo, hi) = do
+slice comp operand (Slice lo wd) = do
   -- let (lo,hi) = (lo' * 4, hi' * 4)
   opwd <- comp.width operand
-  let wd1 = opwd - lo
   x1 <-
     if lo == 0
       then pure operand
       else comp.lshr operand (comp.int opwd (fromIntegral lo))
   -- let x1 = undefined
-  if hi - lo + 1 == wd1
+  wdx1 <- comp.width x1
+  if wdx1 == wd
     then pure x1
-    else comp.trunc x1 (hi - lo + 1)
+    else comp.trunc x1 wd
 
 -- | Compiles an abstract decode tree into LLVM.
 compileDecoder ::
@@ -33,17 +33,14 @@ compileDecoder ::
   (Monad m, Enum part) =>
   CompilerImplementation operand m ->
   Decoder part ->
-  Int ->
   operand ->
   m ()
-compileDecoder c (Case inst) _ operand = do
-  inst' <- mapM (operandDecoder c operand) inst
+compileDecoder c (Case inst) operand = do
+  inst' <- mapM (slice c operand) inst
   c.compileInst inst'
-compileDecoder c (Switch n cases) wd operand = do
-  let compileCase x = compileDecoder c x wd operand
-  opwd <- c.width operand
+compileDecoder c (Switch sl cases) operand = do
+  let compileCase x = compileDecoder c x operand
+  let cases' = fmap compileCase cases
 
-  x1 <- if n == 0 then pure operand else c.lshr operand (c.int opwd (toInteger $ n * wd))
-  x2 <- c.trunc x1 wd
-
-  c.switch (Map.mapKeys (toInteger . fromEnum) $ fmap compileCase cases) c.switchDefault x2
+  x <- slice c operand sl
+  c.switch (Map.mapKeys (toInteger . fromEnum) cases') c.switchDefault x

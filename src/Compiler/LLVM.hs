@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -6,7 +7,10 @@
 module Compiler.LLVM where
 
 import Chip.Instruction
-import Compiler.Common
+import Compiler.Common (CompilerImplementation)
+import qualified Compiler.Common as Comp
+  ( CompilerImplementation (..),
+  )
 import Control.Monad ((>=>))
 import Data.Bifunctor (first)
 import qualified Data.Map as Map
@@ -45,37 +49,24 @@ llvmCompilerImpl ::
   (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) =>
   (Instruction AST.Operand -> m ()) ->
   CompilerImplementation AST.Operand m
-llvmCompilerImpl compileInst = CompilerImplementation {..}
+llvmCompilerImpl compileInst =
+  Comp.CompilerImplementation
+    { width,
+      trunc,
+      int,
+      lshr,
+      compileInst,
+      switch,
+      switchDefault
+    }
   where
-    partwd = 4
-
-    width =
-      AST.typeOf >=> \case
-        Right (AST.IntegerType wd) -> pure (fromIntegral (wd `div` partwd))
-        _ -> error "unsupported type for width calculation"
-
-    int wd n =
-      AST.ConstantOperand $
-        AST.Int (partwd * fromIntegral wd) (fromIntegral n)
-
-    lshr x y = do
-      t <- fromRight' <$> AST.typeOf x
-      y' <- IRB.mul (int 4 4) y
-      IRB.emitInstr t $ AST.LShr False x y' []
-
-    trunc x n = do
-      wd <- width x
-      if wd == n
-        then pure x
-        else IRB.trunc x (intType $ fromIntegral n * partwd)
-
     switch :: Map.Map Integer (m ()) -> m () -> AST.Operand -> m ()
     switch cases def x = do
       errorBlock <- nestedWithName "default" (IRB.currentBlock <* def)
       -- IRB.emitTerm $ AST.IndirectBr x (Data.Map.elems cases') []
       let makeCase c = nested (IRB.currentBlock <* c)
       cases' <- Map.toList <$> traverse makeCase cases
-      wd <- (partwd *) . fromIntegral <$> width x
+      wd <- fromIntegral <$> width x
       let k = first (AST.Int wd) <$> cases'
       IRB.switch x errorBlock k
 
@@ -100,5 +91,15 @@ width ::
   m Int
 width =
   AST.typeOf >=> \case
-    Right (AST.IntegerType wd) -> pure (fromIntegral (wd))
+    Right (AST.IntegerType wd) -> pure (fromIntegral wd)
     _ -> error "unsupported type for width calculation"
+
+trunc x n = do
+  wd <- width x
+  if wd == n
+    then pure x
+    else IRB.trunc x (intType n)
+
+int wd n =
+  AST.ConstantOperand $
+    AST.Int (fromIntegral wd) (fromIntegral n)
