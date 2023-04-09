@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
@@ -11,7 +12,7 @@ module Chip.LLVM.Semantics where
 import Chip.Instruction
 import Chip.LLVM.Extern
 import Compiler.LLVM
-import Control.Applicative (Alternative (empty), liftA2)
+import Control.Applicative (liftA2)
 import Control.Monad (join, void, (>=>))
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as AST
@@ -49,40 +50,40 @@ pc_inc2 Externs {..} = do
   pc' <- IRB.add (word 2) pc
   pc_write pc'
 
-ireg_loop ::
+load :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => AST.Operand -> m AST.Operand
+load x = IRB.load wordType x 8
+
+store :: IRB.MonadIRBuilder m => AST.Operand -> AST.Operand -> m ()
+store x = IRB.store x 8
+
+inc :: (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => AST.Operand -> m ()
+inc x = load x >>= IRB.add (word 1) >>= store x
+
+loop ::
   (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) =>
-  Externs AST.Operand m ->
   -- | i num -> v num -> m ()
-  (AST.Operand -> AST.Operand -> m ()) ->
+  (AST.Operand -> m ()) ->
   AST.Operand ->
   m ()
-ireg_loop Externs {..} f nmax = do
-  let load x = IRB.load wordType x 8
-  let store x = IRB.store x 8
-  let inc x = load x >>= IRB.add (word 1) >>= store x
-
+loop f nmax = do
   i <- IRB.alloca wordType Nothing 8
-  store i =<< reg_read I
+  store i (word 0)
 
-  n <- IRB.alloca wordType Nothing 8
-  store n (word 0)
-
-  start <- IRB.fresh
+  start <- IRB.freshName "loop"
   end <- IRB.fresh
 
   IRB.br start
 
   IRB.emitBlockStart start
-  n' <- load n
-  cond <- IRB.icmp AST.ULE n' nmax
+  i' <- load i
+  cond <- IRB.icmp AST.ULE i' nmax
 
-  let loop = do
-        f i n
-        inc n
+  let body = do
+        f =<< load i
         inc i
         IRB.br start
 
-  if' cond loop (IRB.br end)
+  if' cond body (IRB.br end)
 
   IRB.emitBlockStart end
 
@@ -160,9 +161,19 @@ semantics' externs@Externs {..} = \case
     rnd_byte
       >>= IRB.and mask
       >>= reg_write dst
-  Inst DRW (Reg (V vx)) (Reg (V vy)) (Imm n) ->
-    display_draw vx vy n
-      >>= reg_write vf
+  Inst DRW (Reg (V vx)) (Reg (V vy)) (Imm nmax) ->
+    do
+      erased <- IRB.alloca wordType Nothing 8
+      store erased (word 0)
+      loop
+        ( \n -> do
+            vy' <- IRB.add n vy
+            i' <- reg_read I >>= IRB.add n
+            x <- mem_read i' >>= display_draw vx vy'
+            load erased >>= IRB.or x >>= store erased
+        )
+        nmax
+      load erased >>= reg_write vf
   Inst SKP (Reg (V v)) _ _ ->
     skipIf AST.NE (pure $ word 0) (key_down v)
   Inst SKNP (Reg (V v)) _ _ ->
@@ -173,14 +184,18 @@ semantics' externs@Externs {..} = \case
   Inst LD B (Reg (V v)) _ ->
     pure ()
   Inst LD Iref (Reg (V nmax)) _ ->
-    ireg_loop
-      externs
-      (\i v -> reg_read (V v) >>= mem_write i)
+    loop
+      ( \i -> do
+          i' <- IRB.add i =<< reg_read I
+          reg_read (V i) >>= mem_write i'
+      )
       nmax
   Inst LD (Reg (V nmax)) Iref _ ->
-    ireg_loop
-      externs
-      (\i v -> mem_read i >>= reg_write (V v))
+    loop
+      ( \i -> do
+          i' <- IRB.add i =<< reg_read I
+          mem_read i' >>= reg_write (V i)
+      )
       nmax
   -- Inst SCD _ _ _ -> undefined
   -- Inst SCR _ _ _ -> undefined
@@ -205,7 +220,7 @@ semantics' externs@Externs {..} = \case
       pure x
 
 semantics :: forall m. (IRB.MonadIRBuilder m, IRB.MonadModuleBuilder m) => Externs AST.Operand m -> Instruction AST.Operand -> m ()
-semantics externs@Externs {..} inst = do
+semantics externs inst = do
   inst' <- traverse ext inst
   semantics' externs inst'
   case inst of

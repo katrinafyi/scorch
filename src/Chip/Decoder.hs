@@ -49,7 +49,7 @@ decode =
       (Hc, Case (inst2 RND vx kk)),
       (Hd, Case (inst3 DRW vx vy n)),
       (He, decode_Exxx),
-      (Hf, decode_8xxx)
+      (Hf, decode_Fxxx)
     ]
 decode_0xxx =
   case1
